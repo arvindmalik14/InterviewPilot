@@ -12,6 +12,13 @@ import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
 import { useAuth } from '../context/AuthContext.jsx'
 import { listPlans, getMySubscriptions, createOrder, verifyPayment } from '../api/razorpay.js'
+import { ConfirmDialog } from '../components/ConfirmDialog.jsx'
+import { getPlanSwitchScenario, PLAN_SWITCH_MESSAGES, PLAN_SWITCH_SCENARIO } from '../utils/planSwitch.js'
+
+const CONFIRM_TITLE = {
+  [PLAN_SWITCH_SCENARIO.DOWNGRADE_TO_FREE]: 'Switch to Free plan?',
+  [PLAN_SWITCH_SCENARIO.PLAN_TO_PLAN]: 'Change subscription plan?',
+}
 
 function formatDate(isoDate) {
   return new Date(isoDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
@@ -24,6 +31,7 @@ export function PricingPage() {
   const [loading, setLoading] = useState(true)
   const [payingPlanId, setPayingPlanId] = useState(null)
   const [toast, setToast] = useState(null)
+  const [pendingSwitch, setPendingSwitch] = useState(null)
 
   const loadData = () =>
     Promise.all([listPlans(), getMySubscriptions()]).then(([planData, subData]) => {
@@ -37,8 +45,26 @@ export function PricingPage() {
 
   // A user holds exactly one active plan at a time, so at most one card is ever "current".
   const activePlanId = subscriptions.find((s) => s.subscriptionStatus === 'ACTIVE')?.planId
+  const activePlan = plans.find((p) => p.planId === activePlanId)
   const activeSubscriptionFor = (planId) =>
     subscriptions.find((s) => s.planId === planId && s.subscriptionStatus === 'ACTIVE')
+
+  const handlePlanSelect = (plan) => {
+    if (payingPlanId) return // a request is already in flight — ignore extra clicks
+
+    const scenario = getPlanSwitchScenario(activePlan?.planName, plan.planName)
+    if (scenario) {
+      setPendingSwitch({ plan, scenario })
+    } else {
+      handlePurchase(plan)
+    }
+  }
+
+  const handleConfirmSwitch = () => {
+    const plan = pendingSwitch?.plan
+    setPendingSwitch(null)
+    if (plan) handlePurchase(plan)
+  }
 
   const handlePurchase = async (plan) => {
     setPayingPlanId(plan.planId)
@@ -157,8 +183,8 @@ export function PricingPage() {
                   <Button
                     fullWidth
                     variant={isCurrentPlan ? 'outlined' : 'contained'}
-                    disabled={isCurrentPlan || isPaying}
-                    onClick={() => handlePurchase(plan)}
+                    disabled={isCurrentPlan || Boolean(payingPlanId)}
+                    onClick={() => handlePlanSelect(plan)}
                   >
                     {isPaying ? 'Processing…' : isCurrentPlan ? 'Current plan' : 'Choose plan'}
                   </Button>
@@ -172,6 +198,14 @@ export function PricingPage() {
       <Snackbar open={Boolean(toast)} autoHideDuration={5000} onClose={() => setToast(null)}>
         {toast && <Alert severity={toast.severity}>{toast.message}</Alert>}
       </Snackbar>
+
+      <ConfirmDialog
+        open={Boolean(pendingSwitch)}
+        title={pendingSwitch && CONFIRM_TITLE[pendingSwitch.scenario]}
+        message={pendingSwitch && PLAN_SWITCH_MESSAGES[pendingSwitch.scenario]}
+        onConfirm={handleConfirmSwitch}
+        onCancel={() => setPendingSwitch(null)}
+      />
     </Box>
   )
 }

@@ -4,6 +4,10 @@ import com.malik.InterviewPilot.dto.exam.ExamRequest;
 import com.malik.InterviewPilot.dto.exam.ExamResponse;
 import com.malik.InterviewPilot.dto.question.QuestionAdminResponse;
 import com.malik.InterviewPilot.dto.question.QuestionRequest;
+import com.malik.InterviewPilot.razorpay.dto.PlanAdminResponse;
+import com.malik.InterviewPilot.razorpay.dto.PlanRequest;
+import com.malik.InterviewPilot.razorpay.service.PlanQuestionService;
+import com.malik.InterviewPilot.razorpay.service.PlanService;
 import com.malik.InterviewPilot.service.ExamService;
 import com.malik.InterviewPilot.service.QuestionService;
 import jakarta.validation.Valid;
@@ -22,6 +26,8 @@ public class AdminController {
 
     private final ExamService examService;
     private final QuestionService questionService;
+    private final PlanService planService;
+    private final PlanQuestionService planQuestionService;
 
     @PostMapping("/exams")
     public ResponseEntity<ExamResponse> createExam(@Valid @RequestBody ExamRequest request) {
@@ -63,5 +69,32 @@ public class AdminController {
     public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
         questionService.deleteQuestion(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/plans")
+    public ResponseEntity<PlanAdminResponse> createPlan(@Valid @RequestBody PlanRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(planService.createPlan(request));
+    }
+
+    @PutMapping("/plans/{id}")
+    public PlanAdminResponse updatePlan(@PathVariable Long id, @Valid @RequestBody PlanRequest request) {
+        return planService.updatePlan(id, request);
+    }
+
+    @PostMapping("/plans/{planId}/questions/{questionId}")
+    public ResponseEntity<Void> assignQuestionToPlan(@PathVariable Long planId, @PathVariable Long questionId) {
+        planQuestionService.assignQuestionToPlan(planId, questionId);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("/plans/{planId}/questions/{questionId}")
+    public ResponseEntity<Void> removeQuestionFromPlan(@PathVariable Long planId, @PathVariable Long questionId) {
+        planQuestionService.removeQuestionFromPlan(planId, questionId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/plans/{planId}/questions")
+    public Page<QuestionAdminResponse> listQuestionsForPlan(@PathVariable Long planId, Pageable pageable) {
+        return planQuestionService.listQuestionsForPlan(planId, pageable);
     }
 }

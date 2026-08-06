@@ -41,7 +41,10 @@ export function ForgotPasswordPage() {
     setSubmitting(true)
     try {
       const data = await authApi.forgotPassword(email)
-      setMessage(data.message || 'If an account exists for that email, a temporary password has been sent to it.')
+      setMessage(
+        data.message ||
+          "If an account exists for that email, a temporary password has been sent to it. Don't have an account yet? Sign up instead.",
+      )
     } catch (err) {
       setError(err.message)
     } finally {
@@ -89,6 +92,12 @@ export function ForgotPasswordPage() {
         <Typography variant="body2" sx={{ mt: 3, textAlign: 'center' }}>
           <Link component={RouterLink} to="/login">
             Back to log in
+          </Link>
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
+          Don't have an account?{' '}
+          <Link component={RouterLink} to="/register">
+            Sign up
           </Link>
         </Typography>
       </Paper>

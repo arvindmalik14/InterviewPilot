@@ -53,7 +53,8 @@ public class AuthController {
     public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         passwordResetService.requestPasswordReset(request.email());
         return ResponseEntity.ok(new MessageResponse(
-                "If an account exists for that email, a temporary password has been sent to it."));
+                "If an account exists for that email, a temporary password has been sent to it. "
+                        + "Don't have an account yet? Sign up instead."));
     }
 
     /** Requires the JWT obtained by logging in with the temporary password (see SecurityConfig). */

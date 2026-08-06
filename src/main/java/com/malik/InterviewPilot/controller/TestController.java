@@ -1,5 +1,6 @@
 package com.malik.InterviewPilot.controller;
 
+import com.malik.InterviewPilot.dto.common.MessageResponse;
 import com.malik.InterviewPilot.dto.test.*;
 import com.malik.InterviewPilot.security.UserPrincipal;
 import com.malik.InterviewPilot.service.TestService;
@@ -30,6 +31,15 @@ public class TestController {
             @PathVariable Long id,
             @Valid @RequestBody SubmitTestRequest request) {
         return testService.submitTest(principal.getUser(), id, request);
+    }
+
+    @PostMapping("/{id}/stop")
+    public MessageResponse stopTest(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @PathVariable Long id,
+            @RequestBody StopTestRequest request) {
+        testService.stopTest(principal.getUser(), id, request);
+        return new MessageResponse("Test stopped");
     }
 
     @GetMapping("/history")

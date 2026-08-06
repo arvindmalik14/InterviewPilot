@@ -46,7 +46,7 @@ export function RegisterPage() {
     setSubmitting(true)
     try {
       await register(name, email, mobileNumber, password)
-      navigate('/dashboard', { replace: true })
+      navigate('/login', { replace: true, state: { registered: true } })
     } catch (err) {
       setError(err.message)
     } finally {

@@ -140,7 +140,7 @@ export function DashboardPage() {
                   <Chip
                     label={h.status}
                     size="small"
-                    color={h.status === 'COMPLETED' ? 'success' : 'default'}
+                    color={h.status === 'COMPLETED' ? 'success' : h.status === 'INCOMPLETE' ? 'warning' : 'default'}
                     variant="outlined"
                   />
                 </TableCell>

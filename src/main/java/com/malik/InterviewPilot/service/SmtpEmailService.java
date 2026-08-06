@@ -104,4 +104,36 @@ public class SmtpEmailService implements EmailService {
                 InterviewPilot Platform
                 """.formatted(recipientName, loginUrl, email, temporaryPassword);
     }
+
+    @Override
+    public void sendFeedbackEmail(String name, String email, String category, Integer rating, String message) {
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(fromAddress);
+        mailMessage.setTo(supportAddress);
+        mailMessage.setReplyTo(email);
+        mailMessage.setSubject("feedback");
+        mailMessage.setText(buildFeedbackBody(name, email, category, rating, message));
+        mailSender.send(mailMessage);
+    }
+
+    private String buildFeedbackBody(String name, String email, String category, Integer rating, String message) {
+        return """
+                New feedback submitted on the InterviewPilot Platform.
+
+                Name:
+                %s
+
+                Email:
+                %s
+
+                Category:
+                %s
+
+                Rating:
+                %d / 5
+
+                Message:
+                %s
+                """.formatted(name, email, category, rating, message);
+    }
 }

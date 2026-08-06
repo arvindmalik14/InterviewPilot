@@ -50,10 +50,8 @@ export function AuthProvider({ children }) {
     return applySession(data)
   }
 
-  const register = async (name, email, mobileNumber, password) => {
-    const data = await authApi.register(name, email, mobileNumber, password)
-    return applySession(data)
-  }
+  const register = (name, email, mobileNumber, password) =>
+    authApi.register(name, email, mobileNumber, password)
 
   const completePasswordChange = (data) => applySession(data)
 

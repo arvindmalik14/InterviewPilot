@@ -45,8 +45,9 @@ Starts on **http://localhost:8080**. On first boot it seeds:
   repeats) — see [Plan-scoped question access](#plan-scoped-question-access) below
 
 The H2 database is in-memory — all data resets on every restart. The H2 console is
-available at `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:interviewpilot`,
-user `sa`, empty password).
+available at `http://localhost:8082` — its own standalone server, not part of the app's port
+8080 (Spring Boot 4 dropped H2's built-in servlet auto-configuration; see `H2ConsoleConfig`).
+Log in with JDBC URL `jdbc:h2:mem:interviewpilot`, user `sa`, empty password.
 
 ## Running the frontend
 
@@ -64,14 +65,13 @@ Starts on **http://localhost:5173** and proxies `/api/*` calls to the backend on
 `src/main/resources/application.yaml` has a commented-out MySQL datasource block.
 Uncomment it (and comment out the H2 block above it), point it at a running MySQL
 instance, and set `DB_USERNAME`/`DB_PASSWORD` env vars as needed. The `mysql-connector-j`
-dependency is already in `build.gradle.kts`. Standalone reference DDL scripts (for when you
-don't want Hibernate's `ddl-auto: update` managing schema, e.g. prod) live under
-`src/main/resources/db/`:
+dependency is already in `build.gradle.kts`. A standalone reference DDL script — the complete
+schema for every table, in FK-dependency order, for when you don't want Hibernate's
+`ddl-auto: update` managing schema (e.g. prod) — is at `src/main/resources/db/InterviewPilot_schema.sql`:
 
-- `razorpay_schema.sql` — `subscription_plan`, `user_subscription`, `payment_order`,
-  `payment_transaction`, `plan_question`
-- `users_password_reset_schema.sql` — forgot-password / lockout columns on `users`
-- `users_registration_schema.sql` — signup-flow columns on `users`
+```bash
+mysql -u <user> -p <database> < src/main/resources/db/InterviewPilot_schema.sql
+```
 
 ## Subscription plans & Razorpay module
 

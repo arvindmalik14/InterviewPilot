@@ -25,16 +25,19 @@ public class Question {
     @Column(nullable = false, length = 2000)
     private String question;
 
-    @Column(nullable = false, length = 1000)
+    // Explicit column names: Hibernate's naming strategy doesn't insert an underscore before a
+    // single trailing capital letter, so the implicit mapping is "optiona" (not "option_a") —
+    // pinning it explicitly here means it can't silently change on a future Hibernate version.
+    @Column(name = "optiona", nullable = false, length = 1000)
     private String optionA;
 
-    @Column(nullable = false, length = 1000)
+    @Column(name = "optionb", nullable = false, length = 1000)
     private String optionB;
 
-    @Column(nullable = false, length = 1000)
+    @Column(name = "optionc", nullable = false, length = 1000)
     private String optionC;
 
-    @Column(nullable = false, length = 1000)
+    @Column(name = "optiond", nullable = false, length = 1000)
     private String optionD;
 
     @Column(nullable = false, length = 10)

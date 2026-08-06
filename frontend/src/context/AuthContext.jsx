@@ -32,21 +32,30 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const login = async (email, password) => {
-    const data = await authApi.login(email, password)
+  const applySession = async (data) => {
     localStorage.setItem('ip_token', data.token)
     setUser(data.user)
     await refreshActivePlan()
-    return data.user
+    return data
   }
 
-  const register = async (name, email, password) => {
-    const data = await authApi.register(name, email, password)
-    localStorage.setItem('ip_token', data.token)
-    setUser(data.user)
-    await refreshActivePlan()
-    return data.user
+  const login = async (email, password) => {
+    const data = await authApi.login(email, password)
+    if (data.requiresPasswordReset) {
+      // Store the token so the change-password request can authenticate, but don't
+      // treat the session as logged in until the temp password has been replaced.
+      localStorage.setItem('ip_token', data.token)
+      return data
+    }
+    return applySession(data)
   }
+
+  const register = async (name, email, mobileNumber, password) => {
+    const data = await authApi.register(name, email, mobileNumber, password)
+    return applySession(data)
+  }
+
+  const completePasswordChange = (data) => applySession(data)
 
   const logout = () => {
     localStorage.removeItem('ip_token')
@@ -55,7 +64,9 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, activePlan, refreshActivePlan, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, activePlan, refreshActivePlan, login, register, completePasswordChange, logout }}
+    >
       {children}
     </AuthContext.Provider>
   )

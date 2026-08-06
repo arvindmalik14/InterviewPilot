@@ -78,11 +78,9 @@ public class SecurityConfig {
                                 "/api/auth/register", "/api/auth/signup", "/api/auth/login",
                                 "/api/auth/forgot-password", "/api/auth/resend-password", "/api/auth/logout")
                         .permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/exams/**", "/api/questions/**", "/api/plans/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
-                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

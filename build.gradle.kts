@@ -32,7 +32,9 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	runtimeOnly("com.mysql:mysql-connector-j")
-	runtimeOnly("com.h2database:h2")
+	// implementation, not runtimeOnly: H2ConsoleConfig references org.h2.server.web.WebServlet
+	// directly at compile time (Spring Boot 4 dropped the built-in H2ConsoleAutoConfiguration).
+	implementation("com.h2database:h2")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testImplementation("org.springframework.security:spring-security-test")

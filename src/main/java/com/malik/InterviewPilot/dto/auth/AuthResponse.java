@@ -4,6 +4,7 @@ import com.malik.InterviewPilot.dto.user.UserResponse;
 
 public record AuthResponse(
         String token,
-        UserResponse user
+        UserResponse user,
+        boolean requiresPasswordReset
 ) {
 }

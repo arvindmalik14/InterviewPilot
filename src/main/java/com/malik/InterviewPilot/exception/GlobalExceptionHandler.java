@@ -2,7 +2,10 @@ package com.malik.InterviewPilot.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,6 +39,31 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuth(Exception ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.of(HttpStatus.UNAUTHORIZED.value(), "Invalid email or password"));
+    }
+
+    /** More specific than the AuthenticationException handler above, so Spring prefers this for lockouts. */
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ErrorResponse> handleLocked(LockedException ex) {
+        return ResponseEntity.status(HttpStatus.LOCKED)
+                .body(ErrorResponse.of(HttpStatus.LOCKED.value(),
+                        "Account temporarily locked due to multiple failed login attempts. Try again later."));
+    }
+
+    /** More specific than the AuthenticationException handler above, so Spring prefers this for disabled accounts. */
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(HttpStatus.FORBIDDEN.value(), "This account is deactivated. Contact support."));
+    }
+
+    /**
+     * Without this, AccessDeniedException (from @PreAuthorize or manual self-or-admin checks)
+     * would fall through to the generic Exception handler below and surface as a 500.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.of(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

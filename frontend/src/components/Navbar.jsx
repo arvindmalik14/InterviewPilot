@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
 import Chip from '@mui/material/Chip'
@@ -11,6 +10,7 @@ import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
 import AccountCircleIcon from '@mui/icons-material/AccountCircle'
 import { useAuth } from '../context/AuthContext.jsx'
+import logo from '../assets/logo2.jpg'
 
 export function Navbar() {
   const { user, activePlan, logout } = useAuth()
@@ -33,14 +33,13 @@ export function Navbar() {
   return (
     <AppBar position="static" elevation={0} color="inherit" sx={{ borderBottom: '1px solid #e5e7eb' }}>
       <Toolbar sx={{ gap: 1 }}>
-        <Typography
-          variant="h6"
+        <Box
           component={RouterLink}
           to={user ? '/dashboard' : '/'}
-          sx={{ fontWeight: 700, color: 'primary.main', textDecoration: 'none', mr: 3 }}
+          sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', mr: 3 }}
         >
-          InterviewPilot
-        </Typography>
+          <Box component="img" src={logo} alt="InterviewPilot" sx={{ height: 56, width: 'auto' }} />
+        </Box>
 
         <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
           {user &&

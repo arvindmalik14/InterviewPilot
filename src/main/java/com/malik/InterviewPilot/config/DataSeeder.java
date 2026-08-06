@@ -1,7 +1,9 @@
 package com.malik.InterviewPilot.config;
 
 import com.malik.InterviewPilot.entity.*;
+import com.malik.InterviewPilot.razorpay.entity.PlanQuestion;
 import com.malik.InterviewPilot.razorpay.entity.SubscriptionPlan;
+import com.malik.InterviewPilot.razorpay.repository.PlanQuestionRepository;
 import com.malik.InterviewPilot.razorpay.repository.SubscriptionPlanRepository;
 import com.malik.InterviewPilot.razorpay.service.SubscriptionService;
 import com.malik.InterviewPilot.repository.ExamRepository;
@@ -13,6 +15,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -31,11 +34,13 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final SubscriptionPlanRepository subscriptionPlanRepository;
     private final SubscriptionService subscriptionService;
+    private final PlanQuestionRepository planQuestionRepository;
 
     @Override
     public void run(String... args) {
         seedUsers();
         seedExamsAndQuestions();
+        seedPlanQuestionAssignments();
     }
 
     private void seedUsers() {
@@ -99,6 +104,33 @@ public class DataSeeder implements CommandLineRunner {
         questionRepository.saveAll(springBootQuestions(springBoot));
         questionRepository.saveAll(awsQuestions(aws));
         questionRepository.saveAll(azureQuestions(azure));
+    }
+
+    /**
+     * Demonstrates cascading plan eligibility (a question available to Basic is also available
+     * to every higher tier) by cycling questions through the four tiers exactly like the spec's
+     * example: 1st question -> Free+Basic+Premium+Enterprise, 2nd -> Basic+Premium+Enterprise,
+     * 3rd -> Premium+Enterprise, 4th -> Enterprise only, then the cycle repeats.
+     */
+    private void seedPlanQuestionAssignments() {
+        if (planQuestionRepository.count() > 0) {
+            return;
+        }
+
+        List<SubscriptionPlan> tiersLowToHigh = List.of(
+                findPlanOrThrow("Free"), findPlanOrThrow("Basic"),
+                findPlanOrThrow("Premium"), findPlanOrThrow("Enterprise"));
+
+        List<Question> allQuestions = questionRepository.findAll();
+        List<PlanQuestion> assignments = new ArrayList<>();
+        for (int i = 0; i < allQuestions.size(); i++) {
+            Question question = allQuestions.get(i);
+            int minTier = i % tiersLowToHigh.size();
+            for (int tier = minTier; tier < tiersLowToHigh.size(); tier++) {
+                assignments.add(PlanQuestion.builder().plan(tiersLowToHigh.get(tier)).question(question).build());
+            }
+        }
+        planQuestionRepository.saveAll(assignments);
     }
 
     private List<Question> javaQuestions(Exam exam) {

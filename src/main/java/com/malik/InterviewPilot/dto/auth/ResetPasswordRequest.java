@@ -4,9 +4,9 @@ import com.malik.InterviewPilot.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public record RegisterRequest(
-        @NotBlank(message = "Name is required") String name,
+public record ResetPasswordRequest(
         @NotBlank(message = "Email is required") @Email(message = "Email must be valid") String email,
-        @NotBlank(message = "Password is required") @ValidPassword String password
+        @NotBlank(message = "New password is required") @ValidPassword String newPassword,
+        @NotBlank(message = "Confirm password is required") String confirmPassword
 ) {
 }

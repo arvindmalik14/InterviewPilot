@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 
 @Service
@@ -44,8 +45,28 @@ public class JwtService {
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
+        return isTokenValid(token, userDetails, null);
+    }
+
+    /**
+     * notValidBefore rejects tokens issued before a given instant — the hook that lets a password
+     * change/reset invalidate every previously issued token for that user (see PasswordResetService).
+     */
+    public boolean isTokenValid(String token, UserDetails userDetails, Instant notValidBefore) {
         String email = extractEmail(token);
-        return email.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        if (!email.equals(userDetails.getUsername()) || isTokenExpired(token)) {
+            return false;
+        }
+        return notValidBefore == null || !extractIssuedAt(token).toInstant().isBefore(notValidBefore);
+    }
+
+    public Date extractIssuedAt(String token) {
+        return Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getIssuedAt();
     }
 
     private boolean isTokenExpired(String token) {

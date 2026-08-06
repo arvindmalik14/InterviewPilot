@@ -51,6 +51,18 @@ CREATE TABLE IF NOT EXISTS payment_transaction (
     CONSTRAINT fk_payment_transaction_order FOREIGN KEY (order_id) REFERENCES payment_order (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+CREATE TABLE IF NOT EXISTS plan_question (
+    id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    plan_id             BIGINT        NOT NULL,
+    question_id         BIGINT        NOT NULL,
+    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_plan_question_plan_id_question_id UNIQUE (plan_id, question_id),
+    CONSTRAINT fk_plan_question_plan FOREIGN KEY (plan_id) REFERENCES subscription_plan (plan_id),
+    CONSTRAINT fk_plan_question_question FOREIGN KEY (question_id) REFERENCES questions (id),
+    INDEX idx_plan_question_plan_id (plan_id),
+    INDEX idx_plan_question_question_id (question_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 CREATE TABLE IF NOT EXISTS user_subscription (
     id                          BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id                     BIGINT        NOT NULL,

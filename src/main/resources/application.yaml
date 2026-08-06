@@ -3,18 +3,15 @@ spring:
     name: InterviewPilot
 
   datasource:
-    url: jdbc:h2:mem:interviewpilot;DB_CLOSE_DELAY=-1;MODE=MySQL
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  h2:
-    console:
-      enabled: true
+    url: jdbc:mysql://localhost:3306/interviewpilot?createDatabaseIfNotExist=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: devops
+    password: devops
 
   jpa:
     hibernate:
       ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: false
     properties:
       hibernate:
@@ -46,7 +43,7 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   mail:
-    from: ${MAIL_FROM:no-reply@interviewpilot.com}
+    from: ${MAIL_FROM:arvindmalik14@gmail.com}
     support-address: ${SUPPORT_EMAIL:Intpilotsupport@gmail.com}
   frontend:
     login-url: ${FRONTEND_LOGIN_URL:https://interviewpilot.com/login}
@@ -62,14 +59,8 @@ razorpay:
   # Reuse-window for a user's pending (unpaid) order before we issue a fresh Razorpay order, in minutes.
   pending-order-reuse-minutes: ${RAZORPAY_PENDING_ORDER_REUSE_MINUTES:15}
 
-# --- To switch to MySQL in production, replace the datasource block above with: ---
-# spring:
-#   datasource:
-#     url: jdbc:mysql://localhost:3306/interviewpilot?createDatabaseIfNotExist=true
-#     driver-class-name: com.mysql.cj.jdbc.Driver
-#     username: devops
-#     password: devops
-#   jpa:
-#     hibernate:
-#       ddl-auto: validate
-#     database-platform: org.hibernate.dialect.MySQLDialect
+# --- Migrated from H2 to this MySQL datasource — see MIGRATION.md for the full migration
+# --- steps and error fixes. Once the schema is stable in a real deployment, switch
+# --- ddl-auto above from "update" to "validate" so Hibernate only checks the schema
+# --- matches the entities instead of ever being able to alter it:
+#   jpa.hibernate.ddl-auto: validate

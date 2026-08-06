@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom'
+import { Link as RouterLink } from 'react-router-dom'
 import Box from '@mui/material/Box'
 import Paper from '@mui/material/Paper'
 import Typography from '@mui/material/Typography'
@@ -7,28 +7,41 @@ import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
-import { useAuth } from '../context/AuthContext.jsx'
+import * as authApi from '../api/auth.js'
 
-export function LoginPage() {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [email, setEmail] = useState('demo@interviewpilot.dev')
-  const [password, setPassword] = useState('')
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+export function ForgotPasswordPage() {
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState('')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const handleEmailChange = (e) => {
+    const value = e.target.value
+    setEmail(value)
+    if (emailError) setEmailError(EMAIL_PATTERN.test(value) ? '' : 'Enter a valid email address')
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setMessage('')
+
+    if (!email.trim()) {
+      setEmailError('Email is required')
+      return
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      setEmailError('Enter a valid email address')
+      return
+    }
+
     setSubmitting(true)
     try {
-      const data = await login(email, password)
-      if (data.requiresPasswordReset) {
-        navigate('/change-password', { state: { email } })
-      } else {
-        navigate(location.state?.from || '/dashboard', { replace: true })
-      }
+      const data = await authApi.forgotPassword(email)
+      setMessage(data.message || 'If an account exists for that email, a temporary password has been sent to it.')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -40,15 +53,20 @@ export function LoginPage() {
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, md: 6 } }}>
       <Paper sx={{ p: 4, width: '100%', maxWidth: 420 }} elevation={2}>
         <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-          Welcome back
+          Forgot your password?
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Log in to continue your prep. Demo account: demo@interviewpilot.dev / Demo@123
+          Enter your account email and we'll send you a temporary password to log in with.
         </Typography>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
+          </Alert>
+        )}
+        {message && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {message}
           </Alert>
         )}
 
@@ -57,32 +75,20 @@ export function LoginPage() {
             label="Email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
+            error={Boolean(emailError)}
+            helperText={emailError}
             required
             fullWidth
           />
-          <TextField
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            fullWidth
-          />
-          <Typography variant="body2" sx={{ textAlign: 'right', mt: -1 }}>
-            <Link component={RouterLink} to="/forgot-password">
-              Forgot password?
-            </Link>
-          </Typography>
           <Button type="submit" variant="contained" size="large" disabled={submitting}>
-            {submitting ? 'Logging in…' : 'Log in'}
+            {submitting ? 'Sending…' : 'Send temporary password'}
           </Button>
         </Box>
 
         <Typography variant="body2" sx={{ mt: 3, textAlign: 'center' }}>
-          Don't have an account?{' '}
-          <Link component={RouterLink} to="/register">
-            Sign up
+          <Link component={RouterLink} to="/login">
+            Back to log in
           </Link>
         </Typography>
       </Paper>

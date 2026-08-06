@@ -2,6 +2,7 @@ package com.malik.InterviewPilot.service;
 
 import com.malik.InterviewPilot.dto.auth.AuthResponse;
 import com.malik.InterviewPilot.dto.auth.LoginRequest;
+import com.malik.InterviewPilot.dto.auth.RegisterRequest;
 import com.malik.InterviewPilot.dto.auth.SignupRequest;
 import com.malik.InterviewPilot.dto.auth.SignupResponse;
 import com.malik.InterviewPilot.entity.User;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -60,6 +62,36 @@ class AuthServiceTest {
 
     private User activeUser() {
         return User.builder().id(1L).email("user@example.com").password("hashed").failedLoginAttempts(0).build();
+    }
+
+    @Test
+    void register_createsUser_withMobileNumberPersisted_andAssignsTheFreePlan() {
+        RegisterRequest request = new RegisterRequest("Arvind Kumar", "arvind@example.com", "9999999999", "Password@123");
+        when(userRepository.existsByEmail("arvind@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("Password@123")).thenReturn("hashed-password");
+        when(userRepository.save(any())).thenAnswer(inv -> {
+            User saved = inv.getArgument(0);
+            saved.setId(7L);
+            return saved;
+        });
+        when(jwtService.generateToken(any())).thenReturn("jwt-token");
+
+        AuthResponse response = authService.register(request);
+
+        assertEquals("jwt-token", response.token());
+        assertEquals("arvind@example.com", response.user().email());
+        verify(userRepository).save(argThat(u -> "9999999999".equals(u.getMobileNumber())));
+        verify(subscriptionService).assignFreePlan(any(User.class));
+    }
+
+    @Test
+    void register_rejectsADuplicateEmail() {
+        RegisterRequest request = new RegisterRequest("Arvind Kumar", "arvind@example.com", "9999999999", "Password@123");
+        when(userRepository.existsByEmail("arvind@example.com")).thenReturn(true);
+
+        assertThrows(DuplicateResourceException.class, () -> authService.register(request));
+
+        verify(userRepository, never()).save(any());
     }
 
     @Test

@@ -9,21 +9,43 @@ import Alert from '@mui/material/Alert'
 import Link from '@mui/material/Link'
 import { useAuth } from '../context/AuthContext.jsx'
 
+const validateMobileNumber = (value) => {
+  if (!value.trim()) return 'Mobile number is required'
+  if (!/^[0-9]+$/.test(value)) return 'Digits only, no spaces or symbols'
+  if (value.length < 10 || value.length > 15) return 'Must be 10-15 digits'
+  return ''
+}
+
 export function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
+  const [mobileNumber, setMobileNumber] = useState('')
+  const [mobileError, setMobileError] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  const handleMobileChange = (e) => {
+    const value = e.target.value
+    setMobileNumber(value)
+    if (mobileError) setMobileError(validateMobileNumber(value))
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    const mobileValidationError = validateMobileNumber(mobileNumber)
+    if (mobileValidationError) {
+      setMobileError(mobileValidationError)
+      return
+    }
+
     setSubmitting(true)
     try {
-      await register(name, email, password)
+      await register(name, email, mobileNumber, password)
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err.message)
@@ -59,9 +81,20 @@ export function RegisterPage() {
             fullWidth
           />
           <TextField
+            label="Mobile number"
+            type="tel"
+            placeholder="9999999999"
+            value={mobileNumber}
+            onChange={handleMobileChange}
+            error={Boolean(mobileError)}
+            helperText={mobileError || '10-15 digits, numbers only'}
+            required
+            fullWidth
+          />
+          <TextField
             label="Password"
             type="password"
-            helperText="At least 6 characters"
+            helperText="8-20 characters, with uppercase, lowercase, a digit, and a special character"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required

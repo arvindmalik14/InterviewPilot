@@ -5,9 +5,11 @@ question bank, timed mock tests, AI explanations, subscriptions, leaderboard, an
 admin panel — covering Java, Spring Boot, AWS, and Azure practice exams.
 
 This build follows the "Full-stack MVP, single backend" scope: one Spring Boot backend
-(no microservices split), a React frontend, and an embedded H2 database that requires
-zero setup to run locally. Subscription payments are real (Razorpay); AI features are
-**stubbed** — see [What's stubbed](#whats-stubbed-vs-real) below.
+(no microservices split) and a React frontend. The backend runs against MySQL (migrated
+from an H2 in-memory dev setup — see [`MIGRATION.md`](MIGRATION.md) for the full migration
+steps and every error that came up and was fixed along the way). Subscription payments are
+real (Razorpay); AI features are **stubbed** — see [What's stubbed](#whats-stubbed-vs-real)
+below.
 
 ## Stack
 
@@ -15,7 +17,7 @@ zero setup to run locally. Subscription payments are real (Razorpay); AI feature
 |---|---|
 | Backend | Spring Boot 4.1 (Java 21, Gradle) |
 | Auth | Spring Security + JWT (stateless) |
-| Database | H2 in-memory (dev) — swappable to MySQL, connector already included |
+| Database | MySQL 8 — H2 (in-memory) also still works for zero-setup local dev, see below |
 | Frontend | React 18 + Vite + Material UI 6 |
 | Routing | react-router-dom |
 
@@ -23,6 +25,11 @@ zero setup to run locally. Subscription payments are real (Razorpay); AI feature
 
 - JDK 21
 - Node.js 18+ and npm
+- A running local MySQL 8 instance, with a user matching `application.yaml`'s datasource
+  block (`devops`/`devops` by default — override via `spring.datasource.username`/`password`
+  if yours differs). The connection URL's `createDatabaseIfNotExist=true` creates the
+  `interviewpilot` database on first connect, but the user needs `CREATE DATABASE` privilege
+  for that to work — otherwise create it yourself first: `CREATE DATABASE interviewpilot;`
 
 ## Running the backend
 
@@ -32,7 +39,13 @@ zero setup to run locally. Subscription payments are real (Razorpay); AI feature
 gradlew.bat bootRun       # Windows
 ```
 
-Starts on **http://localhost:8080**. On first boot it seeds:
+Starts on **http://localhost:8080** against MySQL, with `ddl-auto: update` — Hibernate
+creates/reconciles the schema from the entities on its own; you don't need to run the SQL
+scripts under `src/main/resources/db/` by hand for a normal dev boot (they exist as a
+standalone reference — see [`MIGRATION.md`](MIGRATION.md) for when and how to use them, e.g.
+restoring the exact migrated dataset from a fresh database).
+
+On an empty database, first boot seeds:
 
 - An **admin** account: `admin@interviewpilot.dev` / `Admin@123` (assigned the Enterprise plan)
 - A **demo** account: `demo@interviewpilot.dev` / `Demo@123` (assigned the Free plan, same as any new signup)
@@ -44,10 +57,9 @@ Starts on **http://localhost:8080**. On first boot it seeds:
   all four plans, 2nd → Basic and up, 3rd → Premium and up, 4th → Enterprise only, then
   repeats) — see [Plan-scoped question access](#plan-scoped-question-access) below
 
-The H2 database is in-memory — all data resets on every restart. The H2 console is
-available at `http://localhost:8082` — its own standalone server, not part of the app's port
-8080 (Spring Boot 4 dropped H2's built-in servlet auto-configuration; see `H2ConsoleConfig`).
-Log in with JDBC URL `jdbc:h2:mem:interviewpilot`, user `sa`, empty password.
+All seeders (`DataSeeder`, `SubscriptionPlanSeeder`) check for existing data first and skip
+if the tables aren't empty, so this is safe to run repeatedly against a persistent MySQL
+database without duplicating rows.
 
 ## Running the frontend
 
@@ -60,18 +72,42 @@ npm run dev
 Starts on **http://localhost:5173** and proxies `/api/*` calls to the backend on port
 8080 (see `frontend/vite.config.js`). Log in with either seeded account above.
 
-## Switching to MySQL
+## Using H2 instead of MySQL for local dev
 
-`src/main/resources/application.yaml` has a commented-out MySQL datasource block.
-Uncomment it (and comment out the H2 block above it), point it at a running MySQL
-instance, and set `DB_USERNAME`/`DB_PASSWORD` env vars as needed. The `mysql-connector-j`
-dependency is already in `build.gradle.kts`. A standalone reference DDL script — the complete
-schema for every table, in FK-dependency order, for when you don't want Hibernate's
-`ddl-auto: update` managing schema (e.g. prod) — is at `src/main/resources/db/InterviewPilot_schema.sql`:
+If you don't want to run a local MySQL server, swap `application.yaml`'s `spring.datasource`
+block back to an in-memory H2 one — no other code changes needed, the `h2` dependency is
+already in `build.gradle.kts`:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:interviewpilot;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    # remove the database-platform line below when using H2
+```
+
+With H2, all data resets on every restart. The H2 console (a standalone server, not part of
+the app's port 8080 — Spring Boot 4 dropped H2's built-in servlet auto-configuration; see
+`H2ConsoleConfig`) is available at `http://localhost:8082`. Log in with JDBC URL
+`jdbc:h2:mem:interviewpilot`, user `sa`, empty password.
+
+## MySQL reference schema scripts
+
+`src/main/resources/db/` has standalone reference SQL for when you don't want Hibernate's
+`ddl-auto: update` managing schema (e.g. prod), or want to restore the exact dataset this
+project was migrated with:
 
 ```bash
-mysql -u <user> -p <database> < src/main/resources/db/InterviewPilot_schema.sql
+mysql -u <user> -p <database> < src/main/resources/db/InterviewPilot_schema.sql        # schema + plan catalog seed
+mysql -u <user> -p <database> < src/main/resources/db/backup_migrated_mysql.sql        # the migrated H2 data (run once, not idempotent)
 ```
+
+See [`MIGRATION.md`](MIGRATION.md) for what each script does and why.
 
 ## Subscription plans & Razorpay module
 

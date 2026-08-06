@@ -10,29 +10,36 @@ import { ForgotPasswordPage } from './pages/ForgotPasswordPage.jsx'
 import { ChangePasswordPage } from './pages/ChangePasswordPage.jsx'
 import { DashboardPage } from './pages/DashboardPage.jsx'
 import { ExamsPage } from './pages/ExamsPage.jsx'
+import { AiQuestionsPage } from './pages/AiQuestionsPage.jsx'
 import { TestPage } from './pages/TestPage.jsx'
 import { ResultPage } from './pages/ResultPage.jsx'
 import { PricingPage } from './pages/PricingPage.jsx'
 import { LeaderboardPage } from './pages/LeaderboardPage.jsx'
 import { AdminPage } from './pages/AdminPage.jsx'
+import { FeedbackPage } from './pages/FeedbackPage.jsx'
 import { NotFoundPage } from './pages/NotFoundPage.jsx'
 
 export default function App() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <Box component="main" sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, py: 4, flexGrow: 1, width: '100%' }}>
+      <Box
+        component="main"
+        sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, md: 3 }, pt: { xs: 1, sm: 1.5 }, pb: 4, flexGrow: 1, width: '100%' }}
+      >
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/feedback" element={<FeedbackPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/exams" element={<ExamsPage />} />
             <Route path="/exams/:examId/test" element={<TestPage />} />
+            <Route path="/ai-questions" element={<AiQuestionsPage />} />
             <Route path="/results/:testId" element={<ResultPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />

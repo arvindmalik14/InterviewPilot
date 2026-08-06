@@ -14,7 +14,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
-import { startTest, submitTest } from '../api/tests.js'
+import { startTest, submitTest, stopTest } from '../api/tests.js'
 
 function formatDuration(totalSeconds) {
   const m = Math.floor(totalSeconds / 60)
@@ -34,6 +34,8 @@ export function TestPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [stopConfirmOpen, setStopConfirmOpen] = useState(false)
+  const [stopping, setStopping] = useState(false)
   const timerRef = useRef(null)
 
   useEffect(() => {
@@ -64,6 +66,19 @@ export function TestPage() {
     } catch (err) {
       setError(err.message)
       setSubmitting(false)
+    }
+  }
+
+  const handleStopTest = async () => {
+    setStopConfirmOpen(false)
+    setStopping(true)
+    clearInterval(timerRef.current)
+    try {
+      await stopTest(attempt.id, elapsed)
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      setError(err.message)
+      setStopping(false)
     }
   }
 
@@ -135,14 +150,19 @@ export function TestPage() {
         </RadioGroup>
       </Paper>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
         <Button disabled={currentIndex === 0} onClick={() => setCurrentIndex((i) => i - 1)}>
           Previous
         </Button>
 
-        <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center' }}>
-          {answeredCount}/{attempt.questions.length} answered
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            {answeredCount}/{attempt.questions.length} answered
+          </Typography>
+          <Button color="error" variant="outlined" disabled={stopping} onClick={() => setStopConfirmOpen(true)}>
+            {stopping ? 'Stopping…' : 'Stop Test'}
+          </Button>
+        </Box>
 
         {currentIndex < attempt.questions.length - 1 ? (
           <Button variant="contained" onClick={() => setCurrentIndex((i) => i + 1)}>
@@ -167,6 +187,22 @@ export function TestPage() {
           <Button onClick={() => setConfirmOpen(false)}>Keep reviewing</Button>
           <Button variant="contained" onClick={handleSubmit}>
             Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={stopConfirmOpen} onClose={() => setStopConfirmOpen(false)}>
+        <DialogTitle>Stop test?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            You've answered {answeredCount} of {attempt.questions.length} questions. Stopping now will end this
+            attempt and mark it as incomplete in your history — you won't get a score for it.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStopConfirmOpen(false)}>Keep going</Button>
+          <Button variant="contained" color="error" onClick={handleStopTest}>
+            Stop test
           </Button>
         </DialogActions>
       </Dialog>

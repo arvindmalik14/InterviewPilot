@@ -78,7 +78,7 @@ public class SecurityConfig {
                                 "/api/auth/register", "/api/auth/signup", "/api/auth/login",
                                 "/api/auth/forgot-password", "/api/auth/resend-password", "/api/auth/logout")
                         .permitAll()
-                        .requestMatchers("/api/exams/**", "/api/questions/**", "/api/plans/**").permitAll()
+                        .requestMatchers("/api/exams/**", "/api/questions/**", "/api/plans/**", "/api/ai/categories/**", "/api/feedback").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())

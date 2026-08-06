@@ -43,7 +43,7 @@ export function LandingPage() {
 
   return (
     <Box>
-      <Box sx={{ textAlign: 'center', py: { xs: 4, md: 8 } }}>
+      <Box sx={{ textAlign: 'center', pt: { xs: 1, sm: 2 }, pb: { xs: 4, md: 8 } }}>
         <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>
           Ace your next technical interview
         </Typography>

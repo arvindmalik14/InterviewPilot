@@ -1,37 +1,36 @@
+import { Link as RouterLink } from 'react-router-dom'
 import Box from '@mui/material/Box'
-import Container from '@mui/material/Container'
+import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
-import logo from '../assets/logo2.jpg'
+import Link from '@mui/material/Link'
+
+const TRADEMARK_NOTICE =
+  'InterviewPilot™ is a trademark of InterviewPilot. Unauthorized reproduction, distribution, or use of any content is strictly prohibited.'
 
 export function Footer() {
   const year = new Date().getFullYear()
 
   return (
     <Box component="footer" sx={{ mt: 'auto', borderTop: '1px solid #e5e7eb', bgcolor: 'background.paper' }}>
-      <Container
-        maxWidth="lg"
-        sx={{
-          py: 3,
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
-          textAlign: { xs: 'center', sm: 'left' },
-        }}
-      >
-        <Box component="img" src={logo} alt="InterviewPilot" sx={{ height: 72, width: 'auto', flexShrink: 0 }} />
-
-        <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
-            © {year} InterviewPilot. All rights reserved.
+      <Toolbar sx={{ justifyContent: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, minWidth: 0, overflow: 'hidden' }}>
+          <Typography variant="body2" color="text.secondary" noWrap sx={{ fontWeight: 600 }}>
+            © {year} InterviewPilot
           </Typography>
-          <Typography variant="caption" component="p" color="text.secondary" sx={{ mt: 0.5, maxWidth: 560 }}>
-            InterviewPilot™ is a trademark of InterviewPilot. Unauthorized reproduction, distribution, or use of any
-            content is strictly prohibited.
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            title={TRADEMARK_NOTICE}
+            noWrap
+            sx={{ display: { xs: 'none', md: 'block' }, maxWidth: 320 }}
+          >
+            {TRADEMARK_NOTICE}
           </Typography>
+          <Link component={RouterLink} to="/feedback" variant="body2" sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+            Send us feedback
+          </Link>
         </Box>
-      </Container>
+      </Toolbar>
     </Box>
   )
 }

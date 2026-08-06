@@ -100,8 +100,24 @@ public class TestService {
                 attempt.getTotalQuestions(), correctCount, request.durationSeconds(), results);
     }
 
+    public void stopTest(User user, Long testAttemptId, StopTestRequest request) {
+        TestAttempt attempt = findAttemptOrThrow(testAttemptId);
+
+        if (!attempt.getUser().getId().equals(user.getId())) {
+            throw new BadRequestException("This test attempt does not belong to you");
+        }
+        if (!"IN_PROGRESS".equals(attempt.getStatus())) {
+            throw new BadRequestException("This test has already ended");
+        }
+
+        attempt.setDurationSeconds(request.durationSeconds());
+        attempt.setStatus("INCOMPLETE");
+        attempt.setCompletedAt(java.time.Instant.now());
+        testAttemptRepository.save(attempt);
+    }
+
     public List<TestHistoryResponse> getHistory(User user) {
-        return testAttemptRepository.findByUserIdOrderByStartedAtDesc(user.getId()).stream()
+        return testAttemptRepository.findTop10ByUserIdOrderByStartedAtDesc(user.getId()).stream()
                 .map(TestHistoryResponse::from)
                 .toList();
     }

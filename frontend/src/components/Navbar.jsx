@@ -8,7 +8,7 @@ import Chip from '@mui/material/Chip'
 import IconButton from '@mui/material/IconButton'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
-import AccountCircleIcon from '@mui/icons-material/AccountCircle'
+import Avatar from '@mui/material/Avatar'
 import { useAuth } from '../context/AuthContext.jsx'
 import logo from '../assets/logo2.jpg'
 
@@ -26,6 +26,7 @@ export function Navbar() {
   const navLinks = [
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/exams', label: 'Question Bank' },
+    { to: '/ai-questions', label: 'AI Q&A' },
     { to: '/leaderboard', label: 'Leaderboard' },
     { to: '/pricing', label: 'Pricing' },
   ]
@@ -38,7 +39,7 @@ export function Navbar() {
           to={user ? '/dashboard' : '/'}
           sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', mr: 3 }}
         >
-          <Box component="img" src={logo} alt="InterviewPilot" sx={{ height: 56, width: 'auto' }} />
+          <Box component="img" src={logo} alt="InterviewPilot" sx={{ height: 64, width: 'auto' }} />
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1, flexGrow: 1 }}>
@@ -61,7 +62,7 @@ export function Navbar() {
               <Chip label={activePlan.planName} size="small" color="secondary" variant="outlined" sx={{ mr: 1 }} />
             )}
             <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-              <AccountCircleIcon />
+              <Avatar src="/profilePic.jpg" alt={user.name} sx={{ width: 32, height: 32 }} />
             </IconButton>
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
               <MenuItem disabled>{user.name}</MenuItem>

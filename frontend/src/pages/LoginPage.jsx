@@ -46,6 +46,12 @@ export function LoginPage() {
           Log in to continue your prep. Demo account: demo@interviewpilot.dev / Demo@123
         </Typography>
 
+        {!error && location.state?.registered && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Account created. Please log in to continue.
+          </Alert>
+        )}
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
